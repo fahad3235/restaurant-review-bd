@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Restaurant Review BD</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div>
+      <h1 data-i18n="appTitle">Restaurant Review BD</h1>
+      <p class="tagline" data-i18n="tagline">Your personal restaurant visit log</p>
+    </div>
+    <button id="langToggle" type="button" class="lang-btn">Bangla</button>
+  </div>
+</header>
+
+<nav class="tabs wrap" aria-label="Sections">
+  <button type="button" data-tab="dashboard" class="active" data-i18n="tabDashboard">Dashboard</button>
+  <button type="button" data-tab="restaurants" data-i18n="tabRestaurants">Restaurants</button>
+  <button type="button" data-tab="add" data-i18n="tabAdd">Add Restaurant</button>
+  <button type="button" data-tab="data" data-i18n="tabData">Data</button>
+</nav>
+
+<main class="wrap">
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Dashboard -->
+  <section id="tab-dashboard">
+    <h2 data-i18n="dashTitle">Dashboard</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-num" id="statRestaurants">0</div><div class="stat-label" data-i18n="statRestaurants">Restaurants</div></div>
+      <div class="stat"><div class="stat-num" id="statVisits">0</div><div class="stat-label" data-i18n="statVisits">Visits</div></div>
+      <div class="stat"><div class="stat-num" id="statSpend">0</div><div class="stat-label" data-i18n="statSpend">Total spend</div></div>
+      <div class="stat"><div class="stat-num" id="statAvg">-</div><div class="stat-label" data-i18n="statAvg">Average rating</div></div>
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <h3><span data-i18n="topRated">Top rated</span> <small class="muted" data-i18n="minVisitsNote">min. 2 visits</small></h3>
+        <div id="topRatedBox"></div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="mostVisited">Most visited</h3>
+        <div id="mostVisitedBox"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 data-i18n="perCuisine">Visits by cuisine</h3>
+      <table class="cuisine-table">
+        <thead><tr><th data-i18n="fCuisine">Cuisine</th><th data-i18n="statVisits">Visits</th><th data-i18n="statAvg">Average rating</th></tr></thead>
+        <tbody id="cuisineTableBody"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3 data-i18n="recentVisits">Recent visits</h3>
+      <ul id="recentVisits" class="plain-list"></ul>
+    </div>
+  </section>
+
+  <!-- Restaurants -->
+  <section id="tab-restaurants" style="display:none">
+    <div class="section-head">
+      <h2 data-i18n="browseTitle">Restaurants</h2>
+      <button type="button" id="addNewBtn" class="primary" data-i18n="tabAdd">Add Restaurant</button>
+    </div>
+    <div class="filters">
+      <input id="searchInput" type="search" data-i18n-ph="searchPh" placeholder="Search name, area or dish..." aria-label="Search">
+      <select id="cuisineFilter" aria-label="Cuisine filter">
+        <option value="" data-i18n="filterCuisine">All cuisines</option>
+      </select>
+      <select id="priceFilter" aria-label="Price filter">
+        <option value="" data-i18n="filterPrice">Any price</option>
+        <option value="1"></option>
+        <option value="2"></option>
+        <option value="3"></option>
+        <option value="4"></option>
+      </select>
+      <select id="minRatingFilter" aria-label="Minimum rating filter">
+        <option value="" data-i18n="anyRating">Any rating</option>
+        <option value="4.5">4.5+</option>
+        <option value="4">4.0+</option>
+        <option value="3">3.0+</option>
+      </select>
+      <select id="sortSelect" aria-label="Sort">
+        <option value="name" data-i18n="sortName">Name A-Z</option>
+        <option value="rating" data-i18n="sortRating">Highest rated</option>
+        <option value="visits" data-i18n="sortVisits">Most visits</option>
+        <option value="spend" data-i18n="sortSpend">Highest spend</option>
+        <option value="newest" data-i18n="sortNewest">Newest first</option>
+      </select>
+    </div>
+    <div id="restaurantList" class="card-grid"></div>
+  </section>
+
+  <!-- Add / edit restaurant -->
+  <section id="tab-add" style="display:none">
+    <h2 id="restFormTitle" data-i18n="formAddTitle">Add a restaurant</h2>
+    <form id="restForm" novalidate>
+      <div class="field">
+        <label for="fName" data-i18n="fName">Name *</label>
+        <input id="fName" type="text" maxlength="80" required data-i18n-ph="namePh" placeholder="e.g. Kacchi Bhai">
+      </div>
+      <div class="field">
+        <label for="fArea" data-i18n="fArea">Area *</label>
+        <input id="fArea" type="text" list="areaList" maxlength="60" required data-i18n-ph="areaPh" placeholder="e.g. Dhanmondi">
+        <datalist id="areaList"></datalist>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fCuisine" data-i18n="fCuisine">Cuisine</label>
+          <select id="fCuisine"></select>
+        </div>
+        <div class="field">
+          <label for="fPrice" data-i18n="fPrice">Price range</label>
+          <select id="fPrice">
+            <option value="1"></option>
+            <option value="2" selected></option>
+            <option value="3"></option>
+            <option value="4"></option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="fPhone" data-i18n="fPhone">Phone (optional)</label>
+        <input id="fPhone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX">
+      </div>
+      <div class="field">
+        <label for="fNotes" data-i18n="fNotes">Notes (optional, max 200 chars)</label>
+        <textarea id="fNotes" rows="2" maxlength="200"></textarea>
+      </div>
+      <p id="restFormError" class="error" style="display:none"></p>
+      <div class="form-actions">
+        <button type="submit" class="primary" data-i18n="save">Save</button>
+        <button type="button" id="restFormCancel" data-i18n="cancel">Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Visit form (shown on demand) -->
+  <section id="tab-visit" style="display:none">
+    <h2 id="visitFormTitle" data-i18n="visitAddTitle">Add a visit</h2>
+    <p class="muted"><span id="visitRestaurantName"></span></p>
+    <form id="visitForm" novalidate>
+      <div class="field">
+        <label for="vDate" data-i18n="vDate">Date *</label>
+        <input id="vDate" type="date" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="vFood" data-i18n="vFood">Food</label>
+          <select id="vFood">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5" selected>5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vService" data-i18n="vService">Service</label>
+          <select id="vService">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5" selected>5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vAmbience" data-i18n="vAmbience">Ambience</label>
+          <select id="vAmbience">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5" selected>5</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="vDishes" data-i18n="vDishes">Dishes tried (comma separated)</label>
+        <input id="vDishes" type="text" maxlength="200" data-i18n-ph="dishesPh" placeholder="e.g. kachchi biryani, borhani">
+      </div>
+      <div class="field">
+        <label for="vSpend" data-i18n="vSpend">Spend (whole taka)</label>
+        <input id="vSpend" type="text" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="vNotes" data-i18n="vNotes">Notes (optional, max 200 chars)</label>
+        <textarea id="vNotes" rows="2" maxlength="200"></textarea>
+      </div>
+      <p class="muted"><span data-i18n="overallScore">Overall score</span>: <span id="visitScorePreview"></span></p>
+      <p id="visitFormError" class="error" style="display:none"></p>
+      <div class="form-actions">
+        <button type="submit" class="primary" data-i18n="save">Save</button>
+        <button type="button" id="visitFormCancel" data-i18n="cancel">Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Data -->
+  <section id="tab-data" style="display:none">
+    <h2 data-i18n="dataTitle">Your data</h2>
+    <div class="panel">
+      <h3>Export / Import</h3>
+      <p data-i18n="exportNote">Download a copy of all your restaurants and visits.</p>
+      <button type="button" id="exportBtn" class="primary" data-i18n="exportBtn">Download JSON</button>
+      <pre id="exportOutput" class="export-output" style="display:none"></pre>
+      <p data-i18n="importNote">Paste JSON you exported earlier. If the data is invalid, nothing changes.</p>
+      <textarea id="importText" rows="5" data-i18n-ph="importPh" placeholder="Paste JSON here..."></textarea>
+      <div class="form-actions">
+        <button type="button" id="importBtn" class="primary" data-i18n="importBtn">Import JSON</button>
+        <label class="file-btn"><span data-i18n="importFileBtn">Choose a file</span>
+          <input id="importFile" type="file" accept="application/json,.json" hidden>
+        </label>
+      </div>
+      <p id="importError" class="error" style="display:none"></p>
+    </div>
+    <div class="panel">
+      <h3 data-i18n="demoTitle">Demo data</h3>
+      <p data-i18n="demoNote">Demo entries are clearly labelled "Demo".</p>
+      <div class="form-actions">
+        <button type="button" id="demoLoadBtn" data-i18n="demoLoad">Load demo data</button>
+        <button type="button" id="demoClearBtn" class="danger" data-i18n="demoClear">Clear demo data</button>
+      </div>
+    </div>
+    <div class="panel danger-panel">
+      <h3 data-i18n="eraseTitle">Erase everything</h3>
+      <p data-i18n="eraseHint">Type DELETE to confirm.</p>
+      <input id="eraseInput" type="text" placeholder="DELETE" autocomplete="off">
+      <button type="button" id="eraseBtn" class="danger" data-i18n="eraseBtn">Erase all data</button>
+      <p id="eraseError" class="error" style="display:none"></p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p data-i18n="footer1">A personal log. Ratings are your own opinions, not a public guide.</p>
+    <p data-i18n="footer2">Works fully offline - your data never leaves this device.</p>
+  </div>
+</footer>
+
+<script src="js/logic.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
